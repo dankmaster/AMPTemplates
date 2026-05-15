@@ -93,6 +93,16 @@
         "SkipOnFailure": false
     },
     {
+        "UpdateStageName": "Windrose+ Public Map Leaflet Route",
+        "UpdateSourcePlatform": "Linux",
+        "UpdateSource": "Executable",
+        "UpdateSourceData": "/bin/bash",
+        "UpdateSourceArgs": "-c \"set -euo pipefail; base='{{$FullBaseDir}}'; live=\\\"$base/windrose_plus/server/web/livemap/index.html\\\"; catalog=\\\"$base/windrose_plus/server/web/catalog/vendor\\\"; if [ -f \\\"$live\\\" ]; then sed -i 's#/vendor/leaflet/leaflet\\.css#/catalog/vendor/leaflet/leaflet.css#g; s#/vendor/leaflet/leaflet\\.js#/catalog/vendor/leaflet/leaflet.js#g' \\\"$live\\\"; fi; mkdir -p \\\"$catalog\\\"; ln -sfn ../../vendor/leaflet \\\"$catalog/leaflet\\\"; echo 'Windrose+ public map Leaflet assets exposed via /catalog/vendor/leaflet'\"",
+        "UpdateSourceConditionSetting": "InstallWindrosePlus",
+        "UpdateSourceConditionValue": "true",
+        "SkipOnFailure": false
+    },
+    {
         "UpdateStageName": "Windrose+ HeightmapExporter Directory",
         "UpdateSourcePlatform": "Linux",
         "UpdateSource": "CreateDirectory",
