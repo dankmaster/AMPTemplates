@@ -121,7 +121,7 @@
         "OverwriteExistingFiles": true,
         "UpdateSourceConditionSetting": "InstallWindrosePlus",
         "UpdateSourceConditionValue": "true",
-        "SkipOnFailure": false
+        "SkipOnFailure": true
     },
     {
         "UpdateStageName": "Windrose+ HeightmapExporter Enable",
