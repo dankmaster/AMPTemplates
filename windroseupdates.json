@@ -132,5 +132,27 @@
         "UpdateSourceConditionSetting": "InstallWindrosePlus",
         "UpdateSourceConditionValue": "true",
         "SkipOnFailure": false
+    },
+    {
+        "UpdateStageName": "Windrose+ Quistify Overrides Download",
+        "UpdateSourcePlatform": "Linux",
+        "UpdateSource": "FetchURL",
+        "UpdateSourceData": "https://raw.githubusercontent.com/dankmaster/amptemplates/quistify-windroseplus/windrose-quistify-overrides.sh",
+        "UpdateSourceTarget": "{{$FullBaseDir}}windrose_plus_custom",
+        "UpdateSourceArgs": "windrose-quistify-overrides.sh",
+        "OverwriteExistingFiles": true,
+        "UpdateSourceConditionSetting": "InstallWindrosePlus",
+        "UpdateSourceConditionValue": "true",
+        "SkipOnFailure": false
+    },
+    {
+        "UpdateStageName": "Windrose+ Quistify Overrides Apply",
+        "UpdateSourcePlatform": "Linux",
+        "UpdateSource": "Executable",
+        "UpdateSourceData": "/bin/bash",
+        "UpdateSourceArgs": "-c \"set -euo pipefail; chmod +x \\\"{{$FullBaseDir}}windrose_plus_custom/windrose-quistify-overrides.sh\\\"; \\\"{{$FullBaseDir}}windrose_plus_custom/windrose-quistify-overrides.sh\\\" \\\"{{$FullBaseDir}}\\\"\"",
+        "UpdateSourceConditionSetting": "InstallWindrosePlus",
+        "UpdateSourceConditionValue": "true",
+        "SkipOnFailure": false
     }
 ]
