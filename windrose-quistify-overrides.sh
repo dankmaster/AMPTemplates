@@ -337,6 +337,73 @@ EOF
     chmod 0755 "$custom/build_coin_loot_2x_pak.sh"
 }
 
+write_lantern_runtime_builder() {
+    cat > "$custom/build_lantern_runtime_2x_pak.sh" <<'EOF'
+#!/bin/sh
+set -eu
+
+base="${1:-$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)}"
+repak="$base/windrose_plus/tools/bin/repak.exe"
+source_pak="$base/R5/Content/Paks/pakchunk0-WindowsServer.pak"
+out_pak="$base/R5/Content/Paks/WindrosePlus_LanternRuntime_2x_P.pak"
+asset="R5/Plugins/R5BusinessRules/Content/InventoryItems/Consumables/Misc/DA_CID_Misc_Lantern_L1_T01.json"
+counter_tag="Inventory.Item.Attribute.Counter"
+
+command -v jq >/dev/null 2>&1 || { echo "jq is required to build lantern runtime override PAK." >&2; exit 1; }
+
+aes_key=$(
+  sed -n 's/.*WindroseAesKey = "\(.*\)".*/\1/p' \
+    "$base/windrose_plus/tools/lib/IniConfigParser.ps1" | head -n 1
+)
+
+if [ -z "$aes_key" ]; then
+  echo "Failed to read Windrose AES key from Windrose+ tools." >&2
+  exit 1
+fi
+
+if [ ! -x "$repak" ]; then
+  echo "repak is not executable at $repak" >&2
+  exit 1
+fi
+
+stage=$(mktemp -d)
+trap 'rm -rf "$stage"' EXIT
+
+target="$stage/$asset"
+mkdir -p "$(dirname -- "$target")"
+"$repak" --aes-key "$aes_key" get "$source_pak" "$asset" > "$target"
+
+old_max=$(
+  jq -er --arg tag "$counter_tag" \
+    'first(.InventoryItemGppData.Attributes[]? | select(.Tag.TagName == $tag) | .MaxValue)' \
+    "$target"
+) || {
+  echo "Lantern counter MaxValue not found in $asset; refusing to build empty PAK." >&2
+  exit 1
+}
+
+tmp="$target.tmp"
+jq --arg tag "$counter_tag" '
+  (.InventoryItemGppData.Attributes[]? | select(.Tag.TagName == $tag) | .MaxValue) *= 2
+' "$target" > "$tmp"
+mv "$tmp" "$target"
+
+new_max=$(
+  jq -er --arg tag "$counter_tag" \
+    'first(.InventoryItemGppData.Attributes[]? | select(.Tag.TagName == $tag) | .MaxValue)' \
+    "$target"
+)
+
+tmp_out="$out_pak.tmp"
+rm -f "$tmp_out"
+"$repak" pack "$stage" "$tmp_out" >/dev/null
+mv "$tmp_out" "$out_pak"
+
+echo "Built $out_pak with lantern runtime MaxValue $old_max -> $new_max."
+EOF
+    chmod 0755 "$custom/build_lantern_runtime_2x_pak.sh"
+}
+
 write_build_all() {
     cat > "$custom/build_all_quistify_overrides.sh" <<'EOF'
 #!/bin/sh
@@ -360,6 +427,7 @@ Active server-side PAKs:
 - `WindrosePlus_RoughHide_2x_P.pak`: custom server-side PAK that doubles rough hide (`DA_DID_Resource_Leather_T01`) from boar/sow, wolves, and goats.
 - `WindrosePlus_ShipFactionTokens_2x_P.pak`: custom server-side PAK that doubles Blackbeard faction ship-token drops (`DA_DID_Reputation_BlackbeardSign_02/03/04`) and ship loot-table Piastre/Guinea coin drops.
 - `WindrosePlus_CoinLoot_2x_P.pak`: custom server-side PAK that doubles non-ship Piastre/Guinea loot-table drops (`DA_DID_Misc_CoinPiastre_T02`, `DA_DID_Misc_CoinGuinea_T03`).
+- `WindrosePlus_LanternRuntime_2x_P.pak`: custom server-side PAK that doubles lamp runtime by changing the lantern counter max value from 900 to 1800.
 
 Manual rebuild:
 
@@ -386,6 +454,7 @@ run_custom_builders() {
     "$custom/build_rough_hide_2x_pak.sh" "$base"
     "$custom/build_ship_faction_tokens_2x_pak.sh" "$base"
     "$custom/build_coin_loot_2x_pak.sh" "$base"
+    "$custom/build_lantern_runtime_2x_pak.sh" "$base"
 }
 
 write_harvest_config
@@ -393,6 +462,7 @@ ensure_repak
 write_rough_hide_builder
 write_ship_tokens_builder
 write_coin_loot_builder
+write_lantern_runtime_builder
 write_build_all
 write_docs
 run_windroseplus_builder
